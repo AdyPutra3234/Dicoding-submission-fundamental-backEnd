@@ -1,8 +1,8 @@
 const InVariantError = require('../exceptions/InVariantError');
 
 class Validator {
-  constructor(schema) {
-    this._schema = schema;
+  constructor(payloadSchema) {
+    this._schema = payloadSchema;
 
     this.validate = this.validate.bind(this);
   }

@@ -5,7 +5,13 @@ class ErrorHandler {
   handle(request, h) {
     const { response } = request;
 
-    if (response instanceof ClientError) {
+    if (response instanceof ClientError || response.output) {
+      if (response.output.payload.error === 'Unauthorized') {
+        return new ErrorResponse(h, {
+          message: response.message,
+          responseCode: response.output.statusCode,
+        }).send();
+      }
       return new ErrorResponse(h, {
         message: response.message,
         responseCode: response.statusCode,
@@ -15,7 +21,7 @@ class ErrorHandler {
     if (response instanceof Error) {
       return new ErrorResponse(h, {
         status: 'Error',
-        message: 'Terjadi kegagalan pada server',
+        message: response.message,
         responseCode: 500,
       }).send();
     }
