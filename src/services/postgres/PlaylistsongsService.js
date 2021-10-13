@@ -53,9 +53,9 @@ class PlaylistSongsService {
       values: [songId, playlistId],
     };
 
-    const result = await this._pool.query(query);
+    const { rowCount } = await this._pool.query(query);
 
-    if (!result.rowCount) throw new InVariantError('Lagu gagal dihapus, Id lagu tidak ditemukan');
+    if (!rowCount) throw new InVariantError('Lagu gagal dihapus, Id lagu tidak ditemukan');
 
     await this._cacheService.delete(`songs:${playlistId}`);
   }

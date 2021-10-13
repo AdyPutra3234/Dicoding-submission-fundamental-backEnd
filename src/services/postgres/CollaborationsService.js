@@ -31,9 +31,9 @@ class CollaborationsService {
       values: [playlistId, userId],
     };
 
-    const result = await this._pool.query(query);
+    const { rowCount } = await this._pool.query(query);
 
-    if (!result.rowCount) throw new InVariantError('Kolaborasi gagal dihapus');
+    if (!rowCount) throw new InVariantError('Kolaborasi gagal dihapus');
 
     await this._cacheService.delete([`songs:${playlistId}`, `playlists:${userId}`]);
   }
@@ -44,9 +44,9 @@ class CollaborationsService {
       values: [playlistId, userId],
     };
 
-    const result = await this._pool.query(query);
+    const { rowCount } = await this._pool.query(query);
 
-    if (!result.rowCount) throw new InVariantError('Kolaborasi gagal diverifikasi');
+    if (!rowCount) throw new InVariantError('Kolaborasi gagal diverifikasi');
   }
 }
 

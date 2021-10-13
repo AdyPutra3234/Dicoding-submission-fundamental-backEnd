@@ -33,9 +33,9 @@ class UsersService {
       values: [username],
     };
 
-    const result = await this._pool.query(query);
+    const { rowCount } = await this._pool.query(query);
 
-    if (result.rowCount) throw new InvariantError('Gagal menambahkan user, Username sudah digunakan');
+    if (rowCount) throw new InvariantError('Gagal menambahkan user, Username sudah digunakan');
   }
 
   async verifyUserCredential(username, password) {

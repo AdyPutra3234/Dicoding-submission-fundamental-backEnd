@@ -21,9 +21,9 @@ class AuthenticationsService {
       values: [token],
     };
 
-    const result = await this._pool.query(query);
+    const { rowCount } = await this._pool.query(query);
 
-    if (!result.rowCount) throw new InVariantError('Refresh Token is not valid');
+    if (!rowCount) throw new InVariantError('Refresh Token is not valid');
   }
 
   async deleteRefreshToken(token) {

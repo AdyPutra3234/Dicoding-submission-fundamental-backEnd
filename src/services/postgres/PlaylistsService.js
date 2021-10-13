@@ -19,13 +19,13 @@ class PlaylistsService {
       values: [id, playlistName, owner],
     };
 
-    const result = await this._pool.query(query);
+    const { rows } = await this._pool.query(query);
 
-    if (!result.rows[0].id) throw new InvariantError('Playlist gagal ditambahkan');
+    if (!rows[0].id) throw new InvariantError('Playlist gagal ditambahkan');
 
     await this._cacheService.delete(`playlists:${owner}`);
 
-    return result.rows[0].id;
+    return rows[0].id;
   }
 
   async getPlaylists(userId) {
@@ -38,11 +38,11 @@ class PlaylistsService {
         values: [userId],
       };
 
-      const result = await this._pool.query(query);
+      const { rows } = await this._pool.query(query);
 
-      await this._cacheService.set(`playlists:${userId}`, JSON.stringify(result.rows));
+      await this._cacheService.set(`playlists:${userId}`, JSON.stringify(rows));
 
-      return result.rows;
+      return rows;
     }
   }
 
@@ -63,7 +63,7 @@ class PlaylistsService {
 
   async verifyPlaylistOwner(playlistId, owner) {
     const query = {
-      text: 'SELECT * FROM playlists WHERE id = $1',
+      text: 'SELECT owner FROM playlists WHERE id = $1',
       values: [playlistId],
     };
 
