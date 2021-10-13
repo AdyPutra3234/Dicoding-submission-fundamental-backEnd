@@ -3,8 +3,9 @@ const { Pool } = require('pg');
 const InVariantError = require('../../exceptions/InVariantError');
 
 class CollaborationsService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
+    this._cacheService = cacheService;
   }
 
   async addCollaboration(playlistId, userId) {
@@ -19,6 +20,8 @@ class CollaborationsService {
 
     if (!result.rowCount) throw new InVariantError('Kolaborasi gagal ditambahkan');
 
+    await this._cacheService.delete([`songs:${playlistId}`, `playlists:${userId}`]);
+
     return result.rows[0].id;
   }
 
@@ -31,6 +34,8 @@ class CollaborationsService {
     const result = await this._pool.query(query);
 
     if (!result.rowCount) throw new InVariantError('Kolaborasi gagal dihapus');
+
+    await this._cacheService.delete([`songs:${playlistId}`, `playlists:${userId}`]);
   }
 
   async verifyCollaborator(playlistId, userId) {

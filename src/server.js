@@ -1,7 +1,10 @@
 require('dotenv').config();
 
-const Hapi = require('@hapi/hapi');
+const path = require('path');
 const Jwt = require('@hapi/jwt');
+const Hapi = require('@hapi/hapi');
+const Inert = require('@hapi/inert');
+
 const TokenManager = require('./tokenize/TokenManager');
 const Validator = require('./validator/Validator');
 
@@ -39,6 +42,19 @@ const collaborationsPlugin = require('./api/collaborations');
 const CollaborationsService = require('./services/postgres/CollaborationsService');
 const { CollaborationsPayloadSchema } = require('./validator/payloadSchemas/collaborationsSchema');
 
+// Exports
+const exportsPlugin = require('./api/exports');
+const ProducerService = require('./services/rabbitMQ/ProducerService');
+const { ExportPlaylistPayloadSchema } = require('./validator/payloadSchemas/exportsSchema');
+
+// Uploads
+const uploadsPlugin = require('./api/uploads');
+const StorageService = require('./services/storage/StorageService');
+const { ImageHeadersSchema } = require('./validator/payloadSchemas/imageHeaderSchema');
+
+// Redis
+const CacheService = require('./services/redis/CacheService');
+
 // ErrorHandler
 const errorHandlerPlugin = require('./api/errors');
 
@@ -46,10 +62,12 @@ const init = async () => {
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
   const tokenManager = new TokenManager();
-  const collaborationsService = new CollaborationsService();
-  const playlistsService = new PlaylistsService(collaborationsService);
+  const cacheService = new CacheService();
+  const collaborationsService = new CollaborationsService(cacheService);
+  const playlistsService = new PlaylistsService(collaborationsService, cacheService);
   const songsService = new SongsService();
-  const playlistsongsService = new PlaylistSongsService();
+  const playlistsongsService = new PlaylistSongsService(collaborationsService, cacheService);
+  const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/pictures'));
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -64,6 +82,9 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -135,6 +156,21 @@ const init = async () => {
         collaborationsService,
         playlistsService,
         validator: new Validator(CollaborationsPayloadSchema),
+      },
+    },
+    {
+      plugin: exportsPlugin,
+      options: {
+        service: ProducerService,
+        playlistsService,
+        validator: new Validator(ExportPlaylistPayloadSchema),
+      },
+    },
+    {
+      plugin: uploadsPlugin,
+      options: {
+        service: storageService,
+        validator: new Validator(ImageHeadersSchema),
       },
     },
   ]);

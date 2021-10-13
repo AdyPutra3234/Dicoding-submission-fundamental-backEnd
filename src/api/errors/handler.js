@@ -4,14 +4,7 @@ const ErrorResponse = require('../../utils/responses/ErrorResponse');
 class ErrorHandler {
   handle(request, h) {
     const { response } = request;
-
-    if (response instanceof ClientError || response.output) {
-      if (response.output.payload.error === 'Unauthorized') {
-        return new ErrorResponse(h, {
-          message: response.message,
-          responseCode: response.output.statusCode,
-        }).send();
-      }
+    if (response instanceof ClientError) {
       return new ErrorResponse(h, {
         message: response.message,
         responseCode: response.statusCode,
@@ -19,9 +12,18 @@ class ErrorHandler {
     }
 
     if (response instanceof Error) {
+      const { statusCode } = response.output.payload;
+
+      if (statusCode === 401 || statusCode === 413) {
+        return new ErrorResponse(h, {
+          message: response.message,
+          responseCode: statusCode,
+        }).send();
+      }
+
       return new ErrorResponse(h, {
         status: 'Error',
-        message: response.message,
+        message: 'Maaf , Server kami sedang bermasalah',
         responseCode: 500,
       }).send();
     }
